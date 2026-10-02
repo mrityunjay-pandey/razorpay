@@ -2,7 +2,7 @@
 
 A **read-only** [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that lets an AI agent, such as an Agent Studio agent, look up **tickets** and **contacts** in a merchant's Freshdesk helpdesk.
 
-> **Status:** take-home assignment. It implements the core connector and shows the architecture. It is verified by 236 automated tests against mocked HTTP that follows the documented Freshdesk API, plus an optional read-only test suite against a real account. It is **not** production-ready; see [Production considerations](docs/architecture.md#11-production-considerations).
+> **Status:** take-home assignment. It implements the core connector and shows the architecture. It is verified by 236 automated tests against mocked HTTP that follows the documented Freshdesk API. On 2 October 2026 the read-only live suite also **passed 8/8 against a real Freshdesk account** (see [verification](docs/architecture.md#12-how-freshdesk-behaviour-was-verified)). It is **not** production-ready; see [Production considerations](docs/architecture.md#11-production-considerations).
 
 ---
 

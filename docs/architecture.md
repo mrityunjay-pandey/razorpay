@@ -275,7 +275,7 @@ The Zod schema is the published contract, so the model sees the constraints and 
 | **Caching** | None | Short-TTL caching of slow-changing reference data (agents, groups, ticket fields); **not** of ticket or contact content without a clear PII policy |
 | **Data retention / PII** | Minimized responses; no persistence; fixtures fictional | Data-processing agreement; no storage of tool results beyond the session unless required; PII classification of exposed fields; merchant-configurable field exposure |
 | **Transport / deployment** | stdio, single process | Streamable HTTP behind authentication, horizontally scaled stateless instances, health checks, versioned rollout |
-| **Testing** | 236 hermetic tests, coverage thresholds, mock-mode demo, real-process stdio test, optional live suite | Live tests in CI against a dedicated sandbox; contract tests to detect Freshdesk API changes; load tests for rate-limit behaviour |
+| **Testing** | 236 hermetic tests, coverage thresholds, mock-mode demo, real-process stdio test, read-only live suite (passed 8/8 once, run manually) | Live tests in CI against a dedicated sandbox; contract tests to detect Freshdesk API changes; load tests for rate-limit behaviour |
 
 **Scaling.** The server holds no state between calls, so it scales horizontally. The real constraint is Freshdesk's **per-account** rate limit, not connector CPU. Scaling therefore means sharing each merchant's quota well: a distributed limiter per tenant, caching reference data, and preferring cheap calls (for example `list_tickets` without `include`, which costs extra API credits).
 
@@ -295,4 +295,15 @@ All Freshdesk-specific behaviour was taken from the official API v2 documentatio
 - 429 with `Retry-After` and the `X-RateLimit-*` headers;
 - the error body shape.
 
-**Not yet verified against a live account:** the hermetic tests use mocks that follow the documented shapes. `npm run test:live` checks the main assumptions against a real (demo) account: the filter syntax is accepted, real payloads pass the output schemas, and 404 and 401 map correctly. Run it before relying on the connector.
+**Live verification (2 October 2026).** `npm run test:live` passed **8/8** against a real Freshdesk account, through the full MCP path (real MCP client, connector, Freshdesk API). Only counts were recorded, never ticket or contact contents.
+
+| Assumption from the docs | Confirmed live |
+|---|---|
+| Basic auth with `key:X` is accepted; a wrong key returns 401 → `AUTHENTICATION_ERROR` | ✓ |
+| Real List Tickets, View Ticket (`include=requester`) and View Contact payloads pass the published output schemas (the MCP client validates them) | ✓ |
+| Freshdesk accepts the filter query the connector generates (quoted, `OR` groups inside parentheses) | ✓ |
+| `include=requester` returns the requester's email, and List Contacts `email=` finds that contact | ✓ |
+| Contact autocomplete responds in the documented `[{id, name}]` shape | ✓ |
+| A non-existent ticket returns 404 → `NOT_FOUND` | ✓ |
+
+**Still unverified live** (the account was small, and these weren't triggered deliberately): real 429 responses and `Retry-After` values (covered only by tests and the simulated demo); pagination across many pages; custom ticket statuses; very long descriptions; phone and mobile matching formats. The hermetic suite covers these against the documented behaviour.
