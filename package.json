@@ -1,0 +1,43 @@
+{
+  "name": "freshdesk-agent-connector",
+  "version": "0.1.0",
+  "description": "Read-only Freshdesk connector exposing tickets and contacts to AI agents via the Model Context Protocol (MCP).",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "freshdesk-agent-connector": "dist/index.js"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=.env src/index.ts",
+    "start": "node --env-file-if-exists=.env dist/index.js",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "test:coverage": "vitest run --coverage",
+    "test:live": "vitest run --config vitest.live.config.ts",
+    "demo": "tsx demo/run-demo.ts",
+    "demo:live": "tsx --env-file-if-exists=.env demo/run-demo.ts --live",
+    "spec": "tsx demo/generate-tool-spec.ts"
+  },
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.31.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.19.1",
+    "@vitest/coverage-v8": "5.0.3",
+    "eslint": "10.11.0",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.71.0",
+    "vitest": "5.0.3"
+  }
+}
