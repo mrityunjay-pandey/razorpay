@@ -96,7 +96,7 @@ npm run dev --silent     # run from TypeScript source without building (loads .e
 
 > **stdout is the protocol channel.** Without `--silent`, npm prints its `> script` banner on stdout, which corrupts the MCP stream. When configuring an MCP host, launch `node dist/index.js` directly (as below). The connector itself writes only JSON-RPC to stdout; all logs go to stderr.
 
-**Connecting an MCP host.** Hosts that use the common `mcpServers` JSON format (for example Claude Desktop) take an entry like this. Use an absolute path, and keep real keys in the host's secret store where it has one:
+**Connecting an MCP host.** Desktop MCP hosts that use the common `mcpServers` JSON format take an entry like this. Use an absolute path, and keep real keys in the host's secret store where it has one:
 
 ```json
 {
