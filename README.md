@@ -62,8 +62,8 @@ The MCP layer depends only on a small `ConnectorServices` interface, so another 
 ## Installation
 
 ```bash
-git clone <repository-url>
-cd freshdesk-agent-connector
+git clone https://github.com/mrityunjay-pandey/razorpay.git
+cd razorpay
 npm install          # or `npm ci` to install exactly the versions in package-lock.json
 cp .env.example .env
 ```
