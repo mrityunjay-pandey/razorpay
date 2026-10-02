@@ -63,7 +63,12 @@ export class FreshdeskClient {
     this.#timeoutMs = config.timeoutMs;
     this.#fetch = deps.fetch ?? globalThis.fetch;
     this.#log = deps.logger ?? silentLogger;
-    this.#retryPolicy = { ...DEFAULT_RETRY_POLICY, maxRetries: config.maxRetries, ...deps.retryPolicy };
+    this.#retryPolicy = {
+      ...DEFAULT_RETRY_POLICY,
+      maxRetries: config.maxRetries,
+      attemptTimeoutMs: config.timeoutMs,
+      ...deps.retryPolicy,
+    };
     this.#retryDeps = deps.retry ?? {};
   }
 

@@ -2,7 +2,7 @@
 
 A **read-only** [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that lets an AI agent, such as an Agent Studio agent, look up **tickets** and **contacts** in a merchant's Freshdesk helpdesk.
 
-> **Status:** take-home assignment. It implements the core connector and shows the architecture. It is verified by 236 automated tests against mocked HTTP that follows the documented Freshdesk API. On 2 October 2026 the read-only live suite also **passed 8/8 against a real Freshdesk account** (see [verification](docs/architecture.md#12-how-freshdesk-behaviour-was-verified)). It is **not** production-ready; see [Production considerations](docs/architecture.md#11-production-considerations).
+> **Status:** take-home assignment. It implements the core connector and shows the architecture. It is verified by 240 automated tests against mocked HTTP that follows the documented Freshdesk API. On 2 October 2026 the read-only live suite also **passed 8/8 against a real Freshdesk account** (see [verification](docs/architecture.md#12-how-freshdesk-behaviour-was-verified)). It is **not** production-ready; see [Production considerations](docs/architecture.md#11-production-considerations).
 
 ---
 
@@ -76,7 +76,7 @@ Edit `.env` (it is git-ignored, never commit it):
 |---|---|---|---|
 | `FRESHDESK_DOMAIN` | yes | none | Your helpdesk subdomain: `acme`, `acme.freshdesk.com` or `https://acme.freshdesk.com`. Must be `*.freshdesk.com` over HTTPS. |
 | `FRESHDESK_API_KEY` | yes | none | The API key of the Freshdesk agent the connector acts as |
-| `FRESHDESK_TIMEOUT_MS` | no | `10000` | Per-request timeout (1000–60000) |
+| `FRESHDESK_TIMEOUT_MS` | no | `10000` | Per-attempt timeout (1000–30000). Capped so retries always finish inside the 60 s MCP request window |
 | `FRESHDESK_MAX_RETRIES` | no | `3` | Retries for 429, transient 5xx and network errors (0–5) |
 | `FRESHDESK_LIVE_TEST` | no | unset | Set to `1` to enable `npm run test:live` |
 
@@ -89,10 +89,12 @@ The server validates configuration at startup and exits with a clear message lis
 The connector is an MCP **stdio** server: an MCP host starts it as a child process and talks to it over stdin/stdout. It isn't meant to be used directly in a terminal.
 
 ```bash
-npm run build      # compile TypeScript to dist/
-npm start          # run dist/index.js (loads .env if present)
-npm run dev        # run from source with auto-reload (loads .env if present)
+npm run build            # compile TypeScript to dist/
+npm start --silent       # run dist/index.js over stdio (loads .env if present)
+npm run dev --silent     # run from TypeScript source without building (loads .env if present)
 ```
+
+> **stdout is the protocol channel.** Without `--silent`, npm prints its `> script` banner on stdout, which corrupts the MCP stream. When configuring an MCP host, launch `node dist/index.js` directly (as below). The connector itself writes only JSON-RPC to stdout; all logs go to stderr.
 
 **Connecting an MCP host.** Hosts that use the common `mcpServers` JSON format (for example Claude Desktop) take an entry like this. Use an absolute path, and keep real keys in the host's secret store where it has one:
 
@@ -116,7 +118,7 @@ To explore the tools interactively, run the [MCP Inspector](https://github.com/m
 
 | Command | What it does |
 |---|---|
-| `npm test` | 236 hermetic tests (about 2 s). All HTTP is mocked, so there's **no network and no credentials**. |
+| `npm test` | 240 hermetic tests (about 2 s). All HTTP is mocked, so there's **no network and no credentials**. |
 | `npm run test:coverage` | Same, plus a coverage report (`coverage/`). Fails below 95% lines, statements and functions, or 85% branches. |
 | `npm run test:live` | **Optional.** About 8 read-only calls against a real account. Needs `FRESHDESK_LIVE_TEST=1` and real credentials in `.env`. Prints counts only, never data. Use a demo account with fictional data. |
 | `npm run typecheck` | `tsc --noEmit` over source and tests (strict mode) |

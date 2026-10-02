@@ -129,14 +129,14 @@ Freshdesk returns **HTTP 429** with a **`Retry-After`** header (seconds) when th
 | Wait when `Retry-After` is present | Exactly that long (delta-seconds or HTTP-date; malformed values ignored) |
 | Wait otherwise | Full-jitter exponential backoff: `random(0, min(8 s, 500 ms × 2^attempt))` |
 | Retry limit | `FRESHDESK_MAX_RETRIES`, default 3 (so at most 4 attempts) |
-| Time budget | 45 s from the first attempt, **including** request time. If the next wait would cross it, stop immediately |
+| Time budget | 45 s from the first attempt, **including** request time. A retry starts only if *wait + one full attempt timeout* still fits; otherwise stop immediately. With the per-attempt timeout capped at 30 s, worst-case total latency is 45 s |
 | Final failure | Same error code and `retryable` flag, `retryAfterSeconds` kept, message gains "The connector retried N times…" |
 
 Why each choice:
 
 - **Retry-After wins** because the server knows when its window resets. Guessing either wastes a credit on another 429 or waits longer than needed.
 - **Jitter** because the limit is shared across the whole account. Several agent sessions, or the merchant's other integrations, that hit 429 together would collide again if they all retried on the same schedule.
-- **The 45 s budget** exists because the MCP SDK client times out a request after 60 s by default (`DEFAULT_REQUEST_TIMEOUT_MSEC`). Retrying after the caller has given up spends credits on an answer nobody receives. It's better to return `RATE_LIMITED` with `retryAfterSeconds` in time for the agent to tell the user.
+- **The 45 s budget** exists because the MCP SDK client times out a request after 60 s by default (`DEFAULT_REQUEST_TIMEOUT_MSEC`). Retrying after the caller has given up spends credits on an answer nobody receives. It's better to return `RATE_LIMITED` with `retryAfterSeconds` in time for the agent to tell the user. The budget check counts the *next attempt's* timeout, not just the wait, so a retry that couldn't finish in time is never started (a regression test pins the worst case at ≤ 45 s).
 - **Retrying 5xx is safe only because every call is a GET**, which is idempotent. Write operations would need different rules (see 10.7).
 - **No client-side throttling:** the connector can't know its share of an account-wide budget. It logs `freshdesk_rate_limit_low` when remaining quota drops below 10%, which gives operators an early warning.
 
@@ -275,7 +275,7 @@ The Zod schema is the published contract, so the model sees the constraints and 
 | **Caching** | None | Short-TTL caching of slow-changing reference data (agents, groups, ticket fields); **not** of ticket or contact content without a clear PII policy |
 | **Data retention / PII** | Minimized responses; no persistence; fixtures fictional | Data-processing agreement; no storage of tool results beyond the session unless required; PII classification of exposed fields; merchant-configurable field exposure |
 | **Transport / deployment** | stdio, single process | Streamable HTTP behind authentication, horizontally scaled stateless instances, health checks, versioned rollout |
-| **Testing** | 236 hermetic tests, coverage thresholds, mock-mode demo, real-process stdio test, read-only live suite (passed 8/8 once, run manually) | Live tests in CI against a dedicated sandbox; contract tests to detect Freshdesk API changes; load tests for rate-limit behaviour |
+| **Testing** | 240 hermetic tests, coverage thresholds, mock-mode demo, real-process stdio test, read-only live suite (passed 8/8 once, run manually) | Live tests in CI against a dedicated sandbox; contract tests to detect Freshdesk API changes; load tests for rate-limit behaviour |
 
 **Scaling.** The server holds no state between calls, so it scales horizontally. The real constraint is Freshdesk's **per-account** rate limit, not connector CPU. Scaling therefore means sharing each merchant's quota well: a distributed limiter per tenant, caching reference data, and preferring cheap calls (for example `list_tickets` without `include`, which costs extra API credits).
 
@@ -305,5 +305,7 @@ All Freshdesk-specific behaviour was taken from the official API v2 documentatio
 | `include=requester` returns the requester's email, and List Contacts `email=` finds that contact | ✓ |
 | Contact autocomplete responds in the documented `[{id, name}]` shape | ✓ |
 | A non-existent ticket returns 404 → `NOT_FOUND` | ✓ |
+| `X-RateLimit-Total` / `X-RateLimit-Remaining` headers are returned (the trial account reported a total of **50**, so an agent loop would hit 429 quickly and bounded retries matter) | ✓ |
+| Real View Ticket payloads include a `spam` boolean, now surfaced as `isSpam` | ✓ |
 
 **Still unverified live** (the account was small, and these weren't triggered deliberately): real 429 responses and `Retry-After` values (covered only by tests and the simulated demo); pagination across many pages; custom ticket statuses; very long descriptions; phone and mobile matching formats. The hermetic suite covers these against the documented behaviour.

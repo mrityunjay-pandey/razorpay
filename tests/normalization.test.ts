@@ -28,6 +28,7 @@ describe("normalization of sparse payloads", () => {
       description: null,
       descriptionTruncated: false,
       isEscalated: false,
+      isSpam: false,
       firstResponseDueBy: null,
       requester: null,
     });

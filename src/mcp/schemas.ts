@@ -31,6 +31,7 @@ export const ticketDetailSchema = ticketSummarySchema.extend({
   description: nullableString.describe("Plain-text ticket body, truncated if descriptionTruncated is true"),
   descriptionTruncated: z.boolean(),
   isEscalated: z.boolean(),
+  isSpam: z.boolean().describe("Freshdesk has marked this ticket as spam; do not present it as a genuine customer request"),
   firstResponseDueBy: nullableString,
   requester: z.object({ id: z.number().int(), name: nullableString, email: nullableString }).nullable(),
 });

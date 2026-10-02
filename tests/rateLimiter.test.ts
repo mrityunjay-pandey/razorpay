@@ -160,6 +160,35 @@ describe("withRetry", () => {
     expect(error.message).toMatch(/time budget/);
   });
 
+  it("only starts a retry that can finish (wait + attempt timeout) inside the budget", async () => {
+    const time = fakeTime();
+    const attemptTimeoutMs = 10_000;
+    // Fast 429 asking for 40 s: 40 s wait + a 10 s attempt would end at 50 s, past the 45 s budget.
+    const op = vi
+      .fn()
+      .mockRejectedValueOnce(rateLimited(40))
+      .mockImplementation(async () => {
+        time.advance(attemptTimeoutMs);
+        throw serverError();
+      });
+    const error = await captureError(withRetry(op, { ...policy, attemptTimeoutMs }, time.deps));
+    expect(op).toHaveBeenCalledTimes(1);
+    expect(time.sleeps).toEqual([]);
+    expect(error.message).toMatch(/time budget/);
+  });
+
+  it("keeps worst-case latency within the budget when every attempt hangs until timeout", async () => {
+    for (const attemptTimeoutMs of [10_000, 30_000]) {
+      const time = fakeTime(() => 0.999);
+      const op = vi.fn().mockImplementation(async () => {
+        time.advance(attemptTimeoutMs);
+        throw serverError();
+      });
+      await captureError(withRetry(op, { ...policy, maxRetries: 5, attemptTimeoutMs }, time.deps));
+      expect(time.deps.now()).toBeLessThanOrEqual(policy.totalBudgetMs);
+    }
+  });
+
   it("returns the original error unchanged when retries are disabled", async () => {
     const failure = rateLimited(5);
     const op = vi.fn().mockRejectedValue(failure);

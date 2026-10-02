@@ -62,6 +62,7 @@ export interface RawTicket {
   company_id?: number | null;
   tags?: string[] | null;
   is_escalated?: boolean | null;
+  spam?: boolean | null;
   due_by?: string | null;
   fr_due_by?: string | null;
   created_at: string;
@@ -92,6 +93,8 @@ export interface TicketDetail extends TicketSummary {
   description: string | null;
   descriptionTruncated: boolean;
   isEscalated: boolean;
+  /** Freshdesk marked the ticket as spam; get_ticket can return these, list_tickets does not. */
+  isSpam: boolean;
   firstResponseDueBy: string | null;
   /** Name and email only; phone numbers are left to get_contact. */
   requester: { id: number; name: string | null; email: string | null } | null;
@@ -175,6 +178,7 @@ export function toTicketDetail(raw: RawTicket): TicketDetail {
     description: truncated ? `${text.slice(0, DESCRIPTION_MAX_CHARS)}…` : text,
     descriptionTruncated: truncated,
     isEscalated: raw.is_escalated ?? false,
+    isSpam: raw.spam ?? false,
     firstResponseDueBy: raw.fr_due_by ?? null,
     requester: raw.requester
       ? { id: raw.requester.id, name: raw.requester.name ?? null, email: raw.requester.email ?? null }

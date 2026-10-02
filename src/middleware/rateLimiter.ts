@@ -30,6 +30,8 @@ export interface RetryPolicy {
    * SDK's default 60 s request timeout so we never retry for a caller that has gone.
    */
   totalBudgetMs: number;
+  /** Longest a single attempt can take; a retry starts only if wait + attempt fit in the budget. */
+  attemptTimeoutMs?: number;
 }
 
 export const DEFAULT_RETRY_POLICY: Omit<RetryPolicy, "maxRetries"> = {
@@ -90,7 +92,7 @@ export async function withRetry<T>(operation: () => Promise<T>, policy: RetryPol
         throw policy.maxRetries === 0 ? error : givingUp(error, attempt, "retries");
       }
       const delayMs = retryDelayMs(error, attempt, policy, random);
-      if (now() + delayMs > deadline) throw givingUp(error, attempt, "budget");
+      if (now() + delayMs + (policy.attemptTimeoutMs ?? 0) > deadline) throw givingUp(error, attempt, "budget");
 
       deps.onRetry?.({ attempt: attempt + 1, delayMs, error });
       await sleep(delayMs);

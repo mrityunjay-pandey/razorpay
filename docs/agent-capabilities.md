@@ -37,7 +37,7 @@ When a user asks for a change, the server's instructions tell the agent to say t
 | Object | Fields returned |
 |---|---|
 | Ticket (list/search) | id, subject, status, priority, type, source, requesterId, agentId, groupId, companyId, tags, dueBy, createdAt, updatedAt |
-| Ticket (`get_ticket`) | All of the above, plus the plain-text description (truncated at 2,000 characters, flagged), `isEscalated`, `firstResponseDueBy`, requester `{id, name, email}` |
+| Ticket (`get_ticket`) | All of the above, plus the plain-text description (truncated at 2,000 characters, flagged), `isEscalated`, `isSpam` (so a spam-flagged ticket is never presented as a genuine request), `firstResponseDueBy`, requester `{id, name, email}` |
 | Contact (`search_contacts` by name) | id, name |
 | Contact (`search_contacts` by fields) | id, name, email, companyId, verified |
 | Contact (`get_contact`) | id, name, email, phone, mobile, companyId, jobTitle, language, timeZone, verified, tags, createdAt, updatedAt |
@@ -48,7 +48,7 @@ The ticket **description is customer-written text** and can contain anything the
 
 Freshdesk returns these fields, but the connector deliberately drops them:
 
-- **Tickets:** the HTML `description`, `cc_emails`, `fwd_emails`, `reply_cc_emails`, `to_emails`, attachments and their URLs, `custom_fields`, spam and deleted flags, email-config and product IDs, and the requester's phone and mobile (available through `get_contact` when actually needed)
+- **Tickets:** the HTML `description`, `cc_emails`, `fwd_emails`, `reply_cc_emails`, `to_emails`, attachments and their URLs, `custom_fields`, the `deleted` flag (its live shape is unverified), email-config and product IDs, and the requester's phone and mobile (available through `get_contact` when actually needed)
 - **Contacts:** postal address, `description` (internal notes about the customer), other emails, other companies, Twitter or social handles, `unique_external_id`, avatar, devices, and `custom_fields` (which on a merchant's account could hold KYC or payment-related data)
 - **Never anything about the connector itself:** API key, headers, internal errors or stack traces
 

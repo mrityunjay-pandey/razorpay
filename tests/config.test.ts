@@ -70,7 +70,7 @@ describe("loadConfig", () => {
     );
   });
 
-  it.each(["1", "61000", "10.5", "-3"])("rejects out-of-range timeout %s", (value) => {
+  it.each(["1", "30001", "61000", "10.5", "-3"])("rejects out-of-range timeout %s", (value) => {
     expect(() => loadConfig({ ...validEnv, FRESHDESK_TIMEOUT_MS: value })).toThrow(/FRESHDESK_TIMEOUT_MS/);
   });
 

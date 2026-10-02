@@ -70,6 +70,7 @@
         "description": "Fictional description for: Refund not received for order #A-1001",
         "descriptionTruncated": false,
         "isEscalated": false,
+        "isSpam": false,
         "firstResponseDueBy": "2026-10-03T10:00:00Z",
         "requester": {
           "id": 5001,
@@ -111,9 +112,9 @@
    ← recovered after retry: isError=false
    SIMULATION: the mock answers every request with 429 and no Retry-After
    → get_ticket {"ticket_id":1001}
-     [connector log] freshdesk_retry {"path":"/tickets/1001","attempt":1,"delayMs":294,"code":"RATE_LIMITED","status":429}
-     [connector log] freshdesk_retry {"path":"/tickets/1001","attempt":2,"delayMs":889,"code":"RATE_LIMITED","status":429}
-     [connector log] freshdesk_retry {"path":"/tickets/1001","attempt":3,"delayMs":721,"code":"RATE_LIMITED","status":429}
+     [connector log] freshdesk_retry {"path":"/tickets/1001","attempt":1,"delayMs":314,"code":"RATE_LIMITED","status":429}
+     [connector log] freshdesk_retry {"path":"/tickets/1001","attempt":2,"delayMs":219,"code":"RATE_LIMITED","status":429}
+     [connector log] freshdesk_retry {"path":"/tickets/1001","attempt":3,"delayMs":939,"code":"RATE_LIMITED","status":429}
    ← isError: {"error":{"code":"RATE_LIMITED","message":"Freshdesk's API rate limit was exceeded. The connector retried 3 times without success.","retryable":true}}
 
 ── STEP 8 · Validation and normalized errors ────────────────────────────

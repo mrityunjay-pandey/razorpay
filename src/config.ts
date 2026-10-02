@@ -75,7 +75,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): FreshdeskConfi
   else if (PLACEHOLDER_VALUES.has(apiKey)) problems.push("FRESHDESK_API_KEY still has the placeholder value from .env.example.");
   else if (/[\s:]/.test(apiKey)) problems.push("FRESHDESK_API_KEY contains whitespace or ':' characters, which a Freshdesk API key never does.");
 
-  const timeoutMs = collect(() => parseIntInRange("FRESHDESK_TIMEOUT_MS", env.FRESHDESK_TIMEOUT_MS, DEFAULT_TIMEOUT_MS, 1_000, 60_000));
+  // Capped at 30 s so a single slow attempt cannot consume the MCP client's default 60 s request window.
+  const timeoutMs = collect(() => parseIntInRange("FRESHDESK_TIMEOUT_MS", env.FRESHDESK_TIMEOUT_MS, DEFAULT_TIMEOUT_MS, 1_000, 30_000));
   const maxRetries = collect(() => parseIntInRange("FRESHDESK_MAX_RETRIES", env.FRESHDESK_MAX_RETRIES, DEFAULT_MAX_RETRIES, 0, 5));
 
   if (problems.length > 0 || !host || !apiKey || timeoutMs === undefined || maxRetries === undefined) {

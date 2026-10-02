@@ -661,6 +661,10 @@
           "isEscalated": {
             "type": "boolean"
           },
+          "isSpam": {
+            "type": "boolean",
+            "description": "Freshdesk has marked this ticket as spam; do not present it as a genuine customer request"
+          },
           "firstResponseDueBy": {
             "type": [
               "string",
@@ -721,6 +725,7 @@
           "description",
           "descriptionTruncated",
           "isEscalated",
+          "isSpam",
           "firstResponseDueBy",
           "requester"
         ],

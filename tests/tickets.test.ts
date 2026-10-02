@@ -44,6 +44,7 @@ describe("TicketService.get", () => {
       description: "Hi, I was promised a refund last week but have not received it.",
       descriptionTruncated: false,
       isEscalated: false,
+      isSpam: false,
       firstResponseDueBy: "2026-09-28T10:00:00Z",
       requester: { id: 5001, name: "Asha Example", email: "asha@example.test" },
     });
@@ -56,6 +57,11 @@ describe("TicketService.get", () => {
     for (const leaked of ["<div>", "finance-team@", "attachment_url", "cf_internal_note", "VIP", "+91-1"]) {
       expect(serialized).not.toContain(leaked);
     }
+  });
+
+  it("flags tickets Freshdesk has marked as spam, so the agent does not present them as normal", async () => {
+    const { tickets } = serviceWith(jsonResponse(rawTicket({ spam: true })));
+    expect((await tickets.get(101)).isSpam).toBe(true);
   });
 
   it("truncates long descriptions and says so", async () => {
